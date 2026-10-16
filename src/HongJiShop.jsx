@@ -161,7 +161,11 @@ const injectStyles = () => {
 export default function App() {
   const [page, setPage] = useState("home");
   const [cart, setCart] = useState([]);
-  const [products, setProducts] = useState(DEFAULT_PRODUCTS);
+  const [products, setProducts] = useState(() => {
+    try { const c = JSON.parse(localStorage.getItem("hj_products") || "null"); if (Array.isArray(c) && c.length) return c; } catch (e) {}
+    return [];
+  });
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [notification, setNotification] = useState(null);
 
@@ -169,7 +173,13 @@ export default function App() {
 
   const loadProducts = async () => {
     const data = await supaFetch("products", { query: "?order=id.asc" });
-    if (data && data.length > 0) setProducts(data);
+    if (data && data.length > 0) {
+      setProducts(data);
+      try { localStorage.setItem("hj_products", JSON.stringify(data)); } catch (e) {}
+    } else {
+      setProducts((prev) => (prev.length ? prev : DEFAULT_PRODUCTS));
+    }
+    setProductsLoaded(true);
   };
 
   const showNotification = (msg, type = "success") => {
@@ -207,8 +217,8 @@ export default function App() {
         <Header page={page} navigate={navigate} cartCount={cartCount} />
         {notification && <Notification {...notification} />}
         <main style={{ flex: 1 }}>
-          {page === "home"     && <HomePage navigate={navigate} products={products} />}
-          {page === "products" && <ProductsPage products={products} navigate={navigate} />}
+          {page === "home"     && <HomePage navigate={navigate} products={products} loaded={productsLoaded} />}
+          {page === "products" && <ProductsPage products={products} navigate={navigate} loaded={productsLoaded} />}
           {page === "detail"   && selectedProduct && <ProductDetail product={selectedProduct} navigate={navigate} />}
           {page === "cart"     && <CartPage navigate={navigate} />}
           {page === "checkout" && <CheckoutPage navigate={navigate} showNotification={showNotification} cart={cart} setCart={setCart} />}
@@ -274,7 +284,7 @@ function Header({ page, navigate, cartCount }) {
 }
 
 // ─── 首頁 ───
-function HomePage({ navigate, products }) {
+function HomePage({ navigate, products, loaded }) {
   const mobile = useIsMobile();
   return (
     <div>
@@ -404,6 +414,7 @@ function HomePage({ navigate, products }) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: mobile ? 16 : 32 }}>
             {products.slice(0, 3).map((p, i) => <ProductCard key={p.id} product={p} delay={i * 0.1} navigate={navigate} />)}
+            {products.length === 0 && !loaded && <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "var(--warm-gray)", padding: "60px 0", letterSpacing: 4 }}>載入中…</div>}
           </div>
           <div style={{ textAlign: "center", marginTop: mobile ? 36 : 56 }}>
             <button onClick={() => navigate("products")} style={{ background: "transparent", color: "var(--forest)", border: "2px solid var(--forest)", padding: "14px 48px", fontSize: 14, fontWeight: 600, letterSpacing: 3, cursor: "pointer", fontFamily: "'Noto Sans TC', sans-serif", transition: "all 0.3s ease" }}
@@ -489,7 +500,7 @@ function ProductCard({ product, delay = 0, navigate }) {
   );
 }
 
-function ProductsPage({ products, navigate }) {
+function ProductsPage({ products, navigate, loaded }) {
   const mobile = useIsMobile();
   return (
     <div style={{ paddingTop: mobile ? 70 : 100, minHeight: "100vh", background: "#faf8f4" }}>
@@ -504,6 +515,7 @@ function ProductsPage({ products, navigate }) {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: mobile ? "24px 16px 80px" : "40px 24px 100px" }}>
         <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: mobile ? 16 : 32 }}>
           {products.map((p, i) => <ProductCard key={p.id} product={p} delay={i * 0.08} navigate={navigate} />)}
+          {products.length === 0 && !loaded && <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "var(--warm-gray)", padding: "60px 0", letterSpacing: 4 }}>載入中…</div>}
         </div>
       </div>
     </div>

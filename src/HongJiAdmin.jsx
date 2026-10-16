@@ -24,6 +24,37 @@ const supaFetch = async (table, options = {}) => {
   } catch (e) { console.error(e); return null; }
 };
 
+// ─── Supabase Storage (商品圖片) ───
+const PHOTO_BUCKET = "product-photos";
+
+const resizeImage = (blob, maxSize = 1200, quality = 0.85) => new Promise((resolve, reject) => {
+  const url = URL.createObjectURL(blob);
+  const img = new Image();
+  img.onload = () => {
+    const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+    canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+    URL.revokeObjectURL(url);
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("resize failed"))), "image/jpeg", quality);
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("image load failed")); };
+  img.src = url;
+});
+
+const uploadPhoto = async (blob) => {
+  const resized = await resizeImage(blob);
+  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${PHOTO_BUCKET}/${name}`, {
+    method: "POST",
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "image/jpeg", "Cache-Control": "31536000" },
+    body: resized,
+  });
+  if (!res.ok) { console.error(await res.text()); throw new Error("upload failed"); }
+  return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${name}`;
+};
+
 const DEFAULT_PRODUCTS = [
   { name: "凍頂烏龍茶", price: 500, description: "兒茶素氧化程度約25-40%，果香撲鼻，茶湯入口豐富活性，生津潤喉。", icon: "🍃", weight: "150g", category: "烏龍茶", stock: 50 },
   { name: "碳焙凍頂烏龍茶", price: 600, description: "以凍頂烏龍茶為基底，使用傳統工藝碳火烘焙。兒茶素氧化程度約45-70%，厚實果香，多層次甘潤感，茶湯呈琥珀濃艷色。", icon: "🔥", weight: "150g", category: "烏龍茶", stock: 30 },
@@ -127,6 +158,22 @@ export default function AdminPanel() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
     setConfirmDelete(null);
     notify("商品已刪除");
+  };
+
+  const migratePhotos = async () => {
+    const targets = products.filter((p) => p.photo && p.photo.startsWith("data:"));
+    if (targets.length === 0) { notify("沒有需要搬移的圖片", "info"); return; }
+    notify(`正在搬移 ${targets.length} 張圖片…`, "info");
+    let ok = 0;
+    for (const p of targets) {
+      try {
+        const blob = await (await fetch(p.photo)).blob();
+        const url = await uploadPhoto(blob);
+        const result = await supaFetch("products", { method: "PATCH", body: { photo: url }, query: `?id=eq.${p.id}` });
+        if (result && result.length > 0) { ok++; setProducts((prev) => prev.map((x) => x.id === p.id ? { ...x, photo: url } : x)); }
+      } catch (e) { console.error(e); }
+    }
+    notify(ok === targets.length ? `已搬移 ${ok} 張圖片` : `成功 ${ok} / ${targets.length} 張，請檢查 Storage 設定`, ok === targets.length ? "success" : "error");
   };
 
   const updateOrderStatus = async (id, status) => {
@@ -326,6 +373,12 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", gap: 12 }}>
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜尋商品名稱..."
                       style={{ padding: "10px 16px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, fontFamily: "'Noto Sans TC'", width: 200, background: "var(--card)" }} />
+                    {products.some((p) => p.photo && p.photo.startsWith("data:")) && (
+                      <button onClick={migratePhotos}
+                        style={{ background: "var(--card)", color: "var(--forest)", border: "1px solid var(--forest)", padding: "10px 16px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'", fontWeight: 600 }}>
+                        圖片搬到 Storage
+                      </button>
+                    )}
                     <button onClick={() => setEditing({ name: "", price: 0, description: "", category: "", icon: "🍃", weight: "150g", stock: 0 })}
                       style={{ background: "var(--forest)", color: "#fff", border: "none", padding: "10px 24px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 新增商品
@@ -565,12 +618,21 @@ function ProductForm({ product, onSave, onCancel }) {
   const inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid var(--border)", fontSize: 13, fontFamily: "'Noto Sans TC', sans-serif", background: "#fff", borderRadius: 6 };
   const labelStyle = { fontSize: 11, color: "var(--warm-gray)", marginBottom: 4, display: "block", letterSpacing: 0.5, fontWeight: 600 };
 
-  const handlePhotoChange = (e) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, photo: reader.result }));
-    reader.readAsDataURL(file);
+    setUploading(true);
+    setUploadError("");
+    try {
+      const url = await uploadPhoto(file);
+      setForm((f) => ({ ...f, photo: url }));
+    } catch (err) {
+      setUploadError("圖片上傳失敗，請確認 Supabase Storage 已建立 product-photos bucket 並設定權限");
+    }
+    setUploading(false);
   };
 
   return (
@@ -587,6 +649,8 @@ function ProductForm({ product, onSave, onCancel }) {
           </div>
           <div>
             <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ fontSize: 13, fontFamily: "'Noto Sans TC', sans-serif" }} />
+            {uploading && <div style={{ fontSize: 12, color: "var(--warm-gray)", marginTop: 6 }}>上傳中…</div>}
+            {uploadError && <div style={{ fontSize: 12, color: "var(--error)", marginTop: 6 }}>{uploadError}</div>}
             {form.photo && <button onClick={() => setForm((f) => ({ ...f, photo: "" }))} style={{ display: "block", marginTop: 8, background: "none", border: "none", color: "var(--error)", fontSize: 12, cursor: "pointer", padding: 0 }}>移除圖片</button>}
           </div>
         </div>
@@ -603,7 +667,7 @@ function ProductForm({ product, onSave, onCancel }) {
         <textarea style={{ ...inputStyle, minHeight: 70, resize: "vertical" }} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="詳細的商品介紹…" />
       </div>
       <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
-        <button onClick={() => onSave(form)} style={{ background: "var(--forest)", color: "#fff", border: "none", padding: "10px 36px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'", fontWeight: 600 }}>儲存</button>
+        <button disabled={uploading} onClick={() => onSave(form)} style={{ background: "var(--forest)", color: "#fff", border: "none", padding: "10px 36px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'", fontWeight: 600 }}>儲存</button>
         <button onClick={onCancel} style={{ background: "var(--card)", color: "var(--warm-gray)", border: "1px solid var(--border)", padding: "10px 24px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'" }}>取消</button>
       </div>
     </div>
