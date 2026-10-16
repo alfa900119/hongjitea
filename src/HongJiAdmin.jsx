@@ -25,11 +25,13 @@ const supaFetch = async (table, options = {}) => {
 };
 
 const DEFAULT_PRODUCTS = [
-  { name: "凍頂烏龍茶", price: 800, oxidation: "25-40%", aroma: "果香撲鼻", taste: "茶湯入口豐富活性，生津潤喉", description: "兒茶素氧化程度約25-40%，果香撲鼻，茶湯入口豐富活性，生津潤喉。", image: "🍃", weight: "150g", category: "烏龍茶", stock: 50 },
-  { name: "碳焙烏龍茶", price: 1200, oxidation: "45-70%", aroma: "厚實果香", taste: "多層次甘潤感，茶湯呈琥珀濃艷色", description: "以凍頂烏龍茶為基底，使用傳統工藝碳火烘焙。兒茶素氧化程度約45-70%，厚實果香，多層次甘潤感，茶湯呈琥珀濃艷色。", image: "🔥", weight: "150g", category: "烏龍茶", stock: 30 },
-  { name: "小葉紅茶", price: 600, oxidation: "95-99%", aroma: "花果香氣幽雅", taste: "醇厚回甘，花果香氣幽雅", description: "兒茶素氧化程度約95-99%，花果香氣幽雅，醇厚回甘。", image: "🌺", weight: "75g", category: "紅茶", stock: 40 },
-  { name: "鳳凰紅烏龍", price: 900, oxidation: "50-70%", aroma: "烏龍茶的醇，紅茶的香", taste: "滋味醇厚圓潤", description: "兒茶素氧化程度約50-70%，茶湯明亮澄清橙紅，滋味醇厚圓潤，有烏龍茶的醇，紅茶的香。", image: "🦅", weight: "150g", category: "紅烏龍", stock: 35 },
-  { name: "高山茶", price: 1000, oxidation: "10-20%", aroma: "香氣芬芳幽雅", taste: "茶湯鮮活甜爽", description: "兒茶素氧化程度約10-20%，香氣芬芳幽雅，茶湯鮮活甜爽。", image: "⛰️", weight: "150g", category: "高山茶", stock: 25 },
+  { name: "凍頂烏龍茶", price: 500, description: "兒茶素氧化程度約25-40%，果香撲鼻，茶湯入口豐富活性，生津潤喉。", icon: "🍃", weight: "150g", category: "烏龍茶", stock: 50 },
+  { name: "碳焙凍頂烏龍茶", price: 600, description: "以凍頂烏龍茶為基底，使用傳統工藝碳火烘焙。兒茶素氧化程度約45-70%，厚實果香，多層次甘潤感，茶湯呈琥珀濃艷色。", icon: "🔥", weight: "150g", category: "烏龍茶", stock: 30 },
+  { name: "小葉紅茶", price: 500, description: "兒茶素氧化程度約95-99%，花果香氣幽雅，醇厚回甘。", icon: "🌺", weight: "150g", category: "紅茶", stock: 40 },
+  { name: "鳳凰紅烏龍", price: 600, description: "兒茶素氧化程度約50-70%，茶湯明亮澄清橙紅，滋味醇厚圓潤，有烏龍茶的醇，紅茶的香。", icon: "🦅", weight: "150g", category: "紅烏龍", stock: 35 },
+  { name: "鹿谷高山茶", price: 500, description: "兒茶素氧化程度約10-20%，香氣芬芳幽雅，茶湯鮮活甜爽。", icon: "⛰️", weight: "150g", category: "高山茶", stock: 25 },
+  { name: "陳年老茶", price: 1200, description: "以優質烏龍茶為基底，經多年低溫陳放與間歇復火，茶性溫潤降火氣，茶湯呈深琥珀色，陳韻蜜香，甘醇耐泡。", icon: "🍂", weight: "150g", category: "陳年老茶", stock: 20 },
+  { name: "茶包", price: 300, description: "獨立茶包設計，方便沖泡，一盒30入，隨時隨地享受鴻記好茶的醇厚香氣。", icon: "🍵", weight: "一盒30入", category: "茶包", stock: 40 },
 ];
 
 const injectStyles = () => {
@@ -199,7 +201,7 @@ export default function AdminPanel() {
       <aside style={{ width: 240, background: "var(--forest)", color: "#fff", display: "flex", flexDirection: "column", position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 100 }}>
         <div style={{ padding: "28px 24px 20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <span style={{ fontSize: 22 }}>🍵</span>
+            <img src="/logo.jpg" alt="鴻記製茶" style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }} />
             <span className="calligraphy" style={{ fontSize: 24, letterSpacing: 5 }}>鴻記製茶</span>
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", letterSpacing: 2, paddingLeft: 34 }}>管理後台</div>
@@ -324,7 +326,7 @@ export default function AdminPanel() {
                   <div style={{ display: "flex", gap: 12 }}>
                     <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜尋商品名稱..."
                       style={{ padding: "10px 16px", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, fontFamily: "'Noto Sans TC'", width: 200, background: "var(--card)" }} />
-                    <button onClick={() => setEditing({ name: "", price: 0, description: "", category: "", oxidation: "", aroma: "", taste: "", image: "🍃", weight: "150g", stock: 0 })}
+                    <button onClick={() => setEditing({ name: "", price: 0, description: "", category: "", icon: "🍃", weight: "150g", stock: 0 })}
                       style={{ background: "var(--forest)", color: "#fff", border: "none", padding: "10px 24px", borderRadius: 8, fontSize: 13, cursor: "pointer", fontFamily: "'Noto Sans TC'", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
                       <span style={{ fontSize: 16, lineHeight: 1 }}>+</span> 新增商品
                     </button>
@@ -334,14 +336,14 @@ export default function AdminPanel() {
                 {editing && <ProductForm product={editing} onSave={saveProduct} onCancel={() => setEditing(null)} />}
 
                 <div style={{ background: "var(--card)", borderRadius: 12, border: "1px solid var(--border)", overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "52px 1.5fr 0.8fr 90px 80px 90px 140px", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border)", fontSize: 11, color: "var(--warm-gray)", fontWeight: 600, letterSpacing: 0.5 }}>
-                    <span></span><span>商品</span><span>分類</span><span>價格</span><span>庫存</span><span>氧化</span><span>操作</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "52px 1.1fr 0.7fr 1.3fr 70px 80px 70px 140px", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border)", fontSize: 11, color: "var(--warm-gray)", fontWeight: 600, letterSpacing: 0.5 }}>
+                    <span></span><span>商品</span><span>分類</span><span>說明</span><span>淨重</span><span>價格</span><span>庫存</span><span>操作</span>
                   </div>
                   {filteredProducts.length === 0 ? (
                     <div style={{ padding: 48, textAlign: "center", color: "var(--warm-gray)" }}>沒有找到商品</div>
                   ) : filteredProducts.map((p, i) => (
                     <div key={p.id} style={{
-                      display: "grid", gridTemplateColumns: "52px 1.5fr 0.8fr 90px 80px 90px 140px",
+                      display: "grid", gridTemplateColumns: "52px 1.1fr 0.7fr 1.3fr 70px 80px 70px 140px",
                       gap: 12, alignItems: "center", padding: "16px 24px",
                       borderBottom: "1px solid var(--border)",
                       animation: `slideUp 0.3s ease ${i * 0.04}s both`, transition: "background 0.15s",
@@ -349,17 +351,17 @@ export default function AdminPanel() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.01)")}
                       onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                     >
-                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>{p.image}</div>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)", marginBottom: 2 }}>{p.name}</div>
-                        <div style={{ fontSize: 12, color: "var(--warm-gray)", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.aroma}</div>
+                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, overflow: "hidden" }}>
+                        {p.photo ? <img src={p.photo} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : p.icon}
                       </div>
+                      <div style={{ fontWeight: 600, fontSize: 14, color: "var(--ink)" }}>{p.name}</div>
                       <span style={{ fontSize: 12, color: "var(--warm-gray)", background: "var(--bg)", padding: "4px 10px", borderRadius: 6, display: "inline-block", width: "fit-content" }}>{p.category}</span>
+                      <span style={{ fontSize: 12, color: "var(--warm-gray)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</span>
+                      <span style={{ fontSize: 12, color: "var(--warm-gray)" }}>{p.weight}</span>
                       <span className="serif" style={{ fontWeight: 700, color: "var(--gold-dark)", fontSize: 14 }}>NT${p.price}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: (p.stock || 0) > 10 ? "var(--success)" : (p.stock || 0) > 0 ? "var(--warning)" : "var(--error)" }}>
                         {(p.stock || 0) > 0 ? `${p.stock} 件` : "售完"}
                       </span>
-                      <span style={{ fontSize: 12, color: "var(--warm-gray)" }}>{p.oxidation}</span>
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => setEditing(p)} style={{ padding: "6px 16px", border: "1px solid var(--border)", background: "var(--card)", fontSize: 12, cursor: "pointer", borderRadius: 6, fontFamily: "'Noto Sans TC'", fontWeight: 500, transition: "all 0.15s" }}
                           onMouseEnter={(e) => { e.target.style.borderColor = "var(--gold)"; e.target.style.color = "var(--gold)"; }}
@@ -514,10 +516,7 @@ CREATE TABLE products (
   price INTEGER NOT NULL,
   description TEXT,
   category TEXT,
-  oxidation TEXT,
-  aroma TEXT,
-  taste TEXT,
-  image TEXT DEFAULT '🍃',
+  icon TEXT DEFAULT '🍃',
   weight TEXT DEFAULT '150g',
   stock INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -566,20 +565,36 @@ function ProductForm({ product, onSave, onCancel }) {
   const inputStyle = { width: "100%", padding: "10px 14px", border: "1px solid var(--border)", fontSize: 13, fontFamily: "'Noto Sans TC', sans-serif", background: "#fff", borderRadius: 6 };
   const labelStyle = { fontSize: 11, color: "var(--warm-gray)", marginBottom: 4, display: "block", letterSpacing: 0.5, fontWeight: 600 };
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setForm((f) => ({ ...f, photo: reader.result }));
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div style={{ background: "var(--card)", borderRadius: 12, border: "2px solid var(--gold-light)", padding: 28, marginBottom: 24, animation: "slideDown 0.3s ease" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{product.id ? "編輯商品" : "新增商品"}</h3>
         <button onClick={onCancel} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--warm-gray)", padding: 4 }}>✕</button>
       </div>
+      <div style={{ marginBottom: 16 }}>
+        <label style={labelStyle}>商品圖片</label>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 88, height: 88, borderRadius: 8, background: "var(--bg)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+            {form.photo ? <img src={form.photo} alt="預覽" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ fontSize: 32 }}>{form.icon || "🍃"}</span>}
+          </div>
+          <div>
+            <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ fontSize: 13, fontFamily: "'Noto Sans TC', sans-serif" }} />
+            {form.photo && <button onClick={() => setForm((f) => ({ ...f, photo: "" }))} style={{ display: "block", marginTop: 8, background: "none", border: "none", color: "var(--error)", fontSize: 12, cursor: "pointer", padding: 0 }}>移除圖片</button>}
+          </div>
+        </div>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
         <div><label style={labelStyle}>商品名稱 *</label><input style={inputStyle} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="例：凍頂烏龍茶" /></div>
         <div><label style={labelStyle}>價格 (NT$) *</label><input style={inputStyle} type="number" value={form.price} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })} /></div>
         <div><label style={labelStyle}>分類</label><input style={inputStyle} value={form.category || ""} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="烏龍茶 / 紅茶 / 高山茶" /></div>
-        <div><label style={labelStyle}>氧化程度</label><input style={inputStyle} value={form.oxidation || ""} onChange={(e) => setForm({ ...form, oxidation: e.target.value })} placeholder="25-40%" /></div>
-        <div><label style={labelStyle}>香氣特色</label><input style={inputStyle} value={form.aroma || ""} onChange={(e) => setForm({ ...form, aroma: e.target.value })} /></div>
-        <div><label style={labelStyle}>口感描述</label><input style={inputStyle} value={form.taste || ""} onChange={(e) => setForm({ ...form, taste: e.target.value })} /></div>
-        <div><label style={labelStyle}>圖示 (emoji)</label><input style={inputStyle} value={form.image || ""} onChange={(e) => setForm({ ...form, image: e.target.value })} /></div>
         <div><label style={labelStyle}>淨重</label><input style={inputStyle} value={form.weight || ""} onChange={(e) => setForm({ ...form, weight: e.target.value })} placeholder="150g" /></div>
         <div><label style={labelStyle}>庫存數量</label><input style={inputStyle} type="number" value={form.stock || 0} onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })} /></div>
       </div>
