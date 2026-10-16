@@ -413,7 +413,7 @@ function HomePage({ navigate, products, loaded }) {
             <h2 className="serif" style={{ fontSize: mobile ? 26 : 36, fontWeight: 700, color: "var(--forest)", letterSpacing: 2 }}>嚴選好茶</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: mobile ? "1fr 1fr" : "repeat(auto-fill,minmax(280px,1fr))", gap: mobile ? 16 : 32 }}>
-            {products.slice(0, 3).map((p, i) => <ProductCard key={p.id} product={p} delay={i * 0.1} navigate={navigate} />)}
+            {products.slice(0, mobile ? 4 : 3).map((p, i) => <ProductCard key={p.id} product={p} delay={i * 0.1} navigate={navigate} />)}
             {products.length === 0 && !loaded && <div style={{ gridColumn: "1 / -1", textAlign: "center", color: "var(--warm-gray)", padding: "60px 0", letterSpacing: 4 }}>載入中…</div>}
           </div>
           <div style={{ textAlign: "center", marginTop: mobile ? 36 : 56 }}>
